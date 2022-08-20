@@ -158,7 +158,7 @@ namespace cycfi { namespace elements
       };
    }
 
-   window::window(std::string const& name, int style_, rect const& bounds)
+   window::window(std::string const& name, int style_, rect const& bounds, HWND native)
    {
       static init_window_class init;
 
@@ -169,6 +169,7 @@ namespace cycfi { namespace elements
       auto scale = GetDpiForSystem() / 96.0f;
       #endif
 
+      // TODO support native != null
       _window = CreateWindowW(
          L"ElementsWindow",
          wname.c_str(),

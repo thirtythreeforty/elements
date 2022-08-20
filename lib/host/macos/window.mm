@@ -75,8 +75,9 @@ namespace cycfi { namespace elements
       }
    }
 
-   window::window(std::string const& name, int style_, rect const& bounds)
+   window::window(std::string const& name, int style_, rect const& bounds, NSWindow* native)
    {
+      // TODO support native
       ElementsWindow* window_ =
          [[ElementsWindow alloc]
             initWithContentRect : NSMakeRect(0, 0, 0, 0)

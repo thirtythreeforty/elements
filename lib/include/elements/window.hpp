@@ -11,6 +11,12 @@
 
 #if defined(ELEMENTS_HOST_UI_LIBRARY_WIN32)
 # include <Windows.h>
+#elif defined(ELEMENTS_HOST_UI_LIBRARY_COCOA) && defined(__OBJC__)
+# import <Cocoa/Cocoa.h>
+#elif defined(ELEMENTS_HOST_UI_LIBRARY_GTK)
+# include <gtk/gtk.h>
+#elif defined(ELEMENTS_HOST_UI_LIBRARY_X11)
+# include <X11/Xlib.h>
 #endif
 
 #include <infra/support.hpp>
@@ -25,6 +31,19 @@ namespace cycfi { namespace elements
    class window : non_copyable
    {
    public:
+#if defined(ELEMENTS_HOST_UI_LIBRARY_WIN32)
+      using native_window_handle = HWND;
+      static constexpr native_window_handle no_native_window = NULL;
+#elif defined(ELEMENTS_HOST_UI_LIBRARY_COCOA) && defined(__OBJC__)
+      using native_window_handle = NSWindow*;
+      static constexpr native_window_handle no_native_window = nullptr;
+#elif defined(ELEMENTS_HOST_UI_LIBRARY_GTK)
+      using native_window_handle = GtkWindow*;
+      static constexpr native_window_handle no_native_window = nullptr;
+#elif defined(ELEMENTS_HOST_UI_LIBRARY_X11)
+      using native_window_handle = Window;
+      static constexpr native_window_handle no_native_window = None;
+#endif
 
       enum style
       {
@@ -37,18 +56,22 @@ namespace cycfi { namespace elements
        , standard       = with_title | closable | miniaturizable | resizable
       };
 
+#if !defined(ELEMENTS_HOST_UI_LIBRARY_COCOA) || defined(__OBJC__)
                            window(
                               std::string const& name
                             , int style_ = standard
                             , rect const& bounds = rect{ 20, 20, 660, 500 }
+                            , native_window_handle native_window = no_native_window
                            );
 
                            window(
                               int style_ = standard
                             , rect const& bounds = rect{ 20, 20, 660, 500 }
+                            , native_window_handle native_window = no_native_window
                            )
-                            : window("", style_, bounds)
+                            : window("", style_, bounds, native_window)
                            {}
+#endif
 
                            ~window();
 

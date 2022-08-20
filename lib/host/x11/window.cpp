@@ -13,6 +13,7 @@ namespace cycfi { namespace elements
     struct host_window
     {
         Window host;
+        bool host_owned;
     };
 
     Display* get_display();
@@ -21,7 +22,7 @@ namespace cycfi { namespace elements
         return h.host;
     }
 
-    window::window(std::string const& name, int /*style_*/, rect const& bounds)
+    window::window(std::string const& name, int /*style_*/, rect const& bounds, Window native)
     : _window(new host_window)
     {
         Display* display = get_display();
@@ -32,20 +33,26 @@ namespace cycfi { namespace elements
         XSetWindowAttributes attributes;
         attributes.background_pixel = XWhitePixel(display, screen);
 
-        // TODO SubstructureNotify for detecting child resizing
-        _window->host = XCreateWindow(
-            display,
-            RootWindow(display, screen),
-            bounds.top, bounds.left, bounds.right, bounds.bottom,
-            border,
-            depth,
-            InputOutput,
-            visual,
-            CWBackPixel,
-            &attributes);
+        if(native == None) {
+           _window->host_owned = true;
+           _window->host = XCreateWindow(
+               display,
+               RootWindow(display, screen),
+               bounds.top, bounds.left, bounds.right, bounds.bottom,
+               border,
+               depth,
+               InputOutput,
+               visual,
+               CWBackPixel,
+               &attributes);
 
-        XSelectInput(display, _window->host, ExposureMask | KeyPressMask | ButtonPressMask | ButtonReleaseMask);
-        XMapWindow(display, _window->host);
+           XMapWindow(display, _window->host);
+        } else {
+           // allow caller to do everything, including mapping the window
+           _window->host = native;
+           _window->host_owned = false;
+        }
+
         XStoreName(display, _window->host, name.c_str());
 
         Atom wm_delete_window = XInternAtom(get_display(), "WM_DELETE_WINDOW", True);
@@ -56,7 +63,9 @@ namespace cycfi { namespace elements
     window::~window()
     {
         on_close(); // FIXME: move where make possible to veto the event
-        XDestroyWindow(get_display(), _window->host);
+        if(_window->host_owned) {
+           XDestroyWindow(get_display(), _window->host);
+        }
         delete _window;
     }
 

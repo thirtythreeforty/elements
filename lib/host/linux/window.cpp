@@ -39,7 +39,7 @@ namespace cycfi { namespace elements
       return 1.0f / gdk_window_get_scale_factor(gdk_win);
    }
 
-   window::window(std::string const& name, int style_, rect const& bounds)
+   window::window(std::string const& name, int style_, rect const& bounds, GtkWindow* native)
     :  _window(new host_window)
    {
       // Chicken and egg. GTK wants us to create windows only
@@ -65,10 +65,16 @@ namespace cycfi { namespace elements
             size(bounds.bottom_right());
          };
 
-      if (app_is_activated())
-         make_window();
-      else
-         on_activate.push_back(make_window);
+      if(native == nullptr) {
+         if (app_is_activated())
+            make_window();
+         else
+            on_activate.push_back(make_window);
+      } else {
+         // caller is responsible for the event loop, app, and window creation
+         _window->host = GTK_WIDGET(native);
+         g_object_ref(native);
+      }
    }
 
    window::~window()
