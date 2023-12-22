@@ -86,6 +86,11 @@ namespace cycfi { namespace elements
       }
    }
 
+   bool app::tick()
+   {
+       return false;
+   }
+
    void app::stop()
    {
       _running = false;
